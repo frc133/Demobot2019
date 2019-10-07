@@ -1,0 +1,26 @@
+from PCA9685 import PCA9685
+import time
+import math
+import smbus
+import xbox
+
+joy = xbox.Joystick()
+leftJoystick = joy.leftY()
+rightJoystick = joy.rightY()
+
+pwm = PCA9685(0x40, debug=True)
+pwm.setPWMFreq(50)
+
+
+while True:
+  leftJoystick = joy.leftY()
+  rightJoystick = joy.rightY()
+  adjustedValueLeft = (leftJoystick+1)*500+1000
+  adjustedValueRight = (rightJoystick+1)*500+1000
+
+  pwm.setServoPulse(0, adjustedValueLeft)
+  pwm.setServoPulse(1, adjustedValueLeft)
+  pwm.setServoPulse(2, adjustedValueRight)
+  pwm.setServoPulse(3, adjustedValueRight)
+
+joy.close()

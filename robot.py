@@ -1,18 +1,52 @@
-from PCA9685 import PCA9685
+from PCA9685 import PCA9685 #Library for PWM board
 import time
 import math
-import smbus
+import smbus 
 import xbox
+import RPi.GPIO as GPIO
+import threading 
 
 '''
 Option Variables
 '''
-#Drag to correct robot drive, -1.0 to 1.0
-drag = 0.0
+#Drag to correct robot drive, -1.0 to 1.0, positive is right
+drag = -0.1
+
 #Speed multiplier 
 speedMultiplier = 0.8 
 
 
+'''
+Port Variables
+'''
+#Motors
+frontLeftMotor = 0     #I may have front and back switched currently
+backLeftMotor = 1
+frontRightMotor = 2
+backRightMotor = 3
+
+#RSL
+rslPin = 26             #CHECK THIS!!!!
+rslBlinkInterval = 1.0
+
+
+'''
+Initial Variables
+'''
+#If run is false, the program will end. If enable is false, the robot will be disabled, but may be reenabled
+run = True
+enable = True
+
+#RSL status
+rslStatus = 0
+
+#RSL thread
+rslTimer = threading.timer(rslBlinkInterval, rslBlink)
+rslTimer.start()
+
+'''
+Code
+'''
 
 #Add controller and set joysticks
 joy = xbox.Joystick()
@@ -23,9 +57,11 @@ rightJoystick = joy.rightX()
 pwm = PCA9685(0x40, debug=True)
 pwm.setPWMFreq(50)
 
-#If run is false, the program will end. If enable is false, the robot will be disabled, but may be reenabled
-run = True
-enable = True
+#Set GPIO to broadcom mode for pin reference 
+GPIO.setmode(GPIO.BCM)
+
+#Set RSL pin as an output
+GPIO.setup(rslPin, GPIO.OUT)
 
 #Drive functions for 2-joystick control, adapted from wpilibj differentialdrive class
 #xSpeed is forward and backward on the left joystick, zRotation is left and right on the right joystick
@@ -71,34 +107,63 @@ def arcadeDrive(xSpeed, zRotation, squareInputs):
     #Returns left and right motor output values between -1.0 and 1.0 as a tuple
     return leftMotorOutput, rightMotorOutput;
 
+#Function for rsl blink thread
+def rslBlink():
+  if enable == true:
+    #If RSL is off, turn it on. Otherwise, turn it off
+    if rslStatus == 0:
+      rslStatus = 1
+    else 
+      rslStatus = 0
+  else:
+    rslStatus = 1
 
-
-#Main loop- setting run to false exits program
+'''
+Main loop- setting run to false exits program
+'''
 while run == True:
   #Enabled loop
   if enable == True:
+
+    #Check whether RSL should be on or off
+    if rslStatus == 1:
+      #Turn RSL on
+      GPIO.output(rslPin, GPIO.HIGH)
+    else:
+      #Turn RSL off
+      GPIO.output(rslPin, GPIO.LOW)
+
     #Constantly poll left and right joystick positions
     leftJoystick = joy.leftY()
     rightJoystick = joy.rightX()
+
     #Put joystick values into arcadeDrive function to calculate output for motors
     leftOutput, rightOutput = arcadeDrive(leftJoystick, rightJoystick, True)
+
     #Adjust values of output to match PWM frequency
     adjustedValueLeft = (leftOutput+1)*500+1000
     adjustedValueRight = (rightOutput+1)*500+1000
+
     #Send PWM Frequencies to motor controllers
-    pwm.setServoPulse(0, adjustedValueLeft)
-    pwm.setServoPulse(1, adjustedValueLeft)
-    pwm.setServoPulse(2, adjustedValueRight)
-    pwm.setServoPulse(3, adjustedValueRight)
+    pwm.setServoPulse(frontLeftMotor, adjustedValueLeft)
+    pwm.setServoPulse(backLeftMotor, adjustedValueLeft)
+    pwm.setServoPulse(frontRightMotor, adjustedValueRight)
+    pwm.setServoPulse(backRightMotor, adjustedValueRight)
+
     #Press X to Disable
     if joy.X() == 1:
       enable = False
     #Press Y to Enable
     if joy.Y() == 1:
       enable = True
+      
   #Press start + back to exit program (run = false)
   if joy.Start() == 1 and joy.Back() == 1:
     run = False
+
+
+#Reset GPIO for pi
+GPIO.cleanup()
 
 #Close Joystick interface
 joy.close()

@@ -15,6 +15,12 @@ drag = -0.1
 #Speed multiplier 
 speedMultiplier = 0.8 
 
+#Deadzone (# in both directions)
+deadzone = 200
+
+#Connection timeout
+timeout = 5.0
+
 
 '''
 Port Variables
@@ -37,12 +43,16 @@ Initial Variables
 run = True
 enable = True
 
-#RSL status
-rslStatus = 0
-
 #RSL thread
 rslTimer = threading.timer(rslBlinkInterval, rslBlink)
 rslTimer.start()
+rslStatus = 0
+
+#Disconnect Detection Thread 
+timeoutThread = threading.timer(1.0, timeoutDetection)
+currentTimeout = timeout
+timeoutThread.start()
+
 
 '''
 Code
@@ -118,12 +128,21 @@ def rslBlink():
   else:
     rslStatus = 1
 
+def timeoutDetection():
+  currentTimeout -= 1
+  if currentTimeout <= 0:
+    enable == False
+
 '''
 Main loop- setting run to false exits program
 '''
 while run == True:
   #Enabled loop
   if enable == True:
+
+    #Check if controller is connected
+    if not joy.connected():
+      enable = False
 
     #Check whether RSL should be on or off
     if rslStatus == 1:
@@ -144,6 +163,15 @@ while run == True:
     adjustedValueLeft = (leftOutput+1)*500+1000
     adjustedValueRight = (rightOutput+1)*500+1000
 
+    #Apply Deadzones
+    if (adjustedValueLeft >= (1500 - deadzone) and adjustedValueLeft <= (1500 + deadzone)):
+      adjustedValueLeft = 1500
+    else if (adjustedValueRight >= (1500 - deadzone) and adjustedValueRight <= (1500 + deadzone)):
+      adjustedValueRight = 1500
+    #If not in the deadzone, reset timeout countdown
+    else:
+      currentTimeout = timeout
+
     #Send PWM Frequencies to motor controllers
     pwm.setServoPulse(frontLeftMotor, adjustedValueLeft)
     pwm.setServoPulse(backLeftMotor, adjustedValueLeft)
@@ -156,11 +184,24 @@ while run == True:
     #Press Y to Enable
     if joy.Y() == 1:
       enable = True
-      
+      currentTimeout = timeout
+  else:
+    #If disabled, 
+    #stop motors
+    pwm.setServoPulse(frontLeftMotor, 1500)
+    pwm.setServoPulse(backLeftMotor, 1500)
+    pwm.setServoPulse(frontRightMotor, 1500)
+    pwm.setServoPulse(backRightMotor, 1500)
+
   #Press start + back to exit program (run = false)
   if joy.Start() == 1 and joy.Back() == 1:
     run = False
 
+#Double check that motors are off before exiting 
+pwm.setServoPulse(frontLeftMotor, 1500)
+pwm.setServoPulse(backLeftMotor, 1500)
+pwm.setServoPulse(frontRightMotor, 1500)
+pwm.setServoPulse(backRightMotor, 1500)
 
 #Reset GPIO for pi
 GPIO.cleanup()

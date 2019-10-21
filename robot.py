@@ -34,7 +34,7 @@ backRightMotor = 3
 #RSL
 rslPin = 26             #CHECK THIS!!!!
 rslBlinkInterval = 1.0
-
+rslStatus = 0
 
 '''
 Initial Variables
@@ -44,14 +44,31 @@ run = True
 enable = True
 
 #RSL thread
-rslTimer = threading.timer(rslBlinkInterval, rslBlink)
-rslTimer.start()
-rslStatus = 0
+
+#Function for rsl blink thread
+def rslBlink():
+  if enable == True:
+    #If RSL is off, turn it on. Otherwise, turn it off
+    if rslStatus == 0:
+      rslStatus = 1
+    else: 
+      rslStatus = 0
+  else:
+    rslStatus = 1
+
+#def timeoutDetection():
+#  currentTimeout -= 1
+#  if currentTimeout <= 0:
+#    enable == False
+
+
+currentTimeout = timeout
+##rslTimer = threading.Timer(rslBlinkInterval, rslBlink)
+#rslTimer.start()
 
 #Disconnect Detection Thread 
-timeoutThread = threading.timer(1.0, timeoutDetection)
-currentTimeout = timeout
-timeoutThread.start()
+#timeoutThread = threading.Timer(1.0, timeoutDetection)
+#timeoutThread.start()
 
 
 '''
@@ -117,22 +134,6 @@ def arcadeDrive(xSpeed, zRotation, squareInputs):
     #Returns left and right motor output values between -1.0 and 1.0 as a tuple
     return leftMotorOutput, rightMotorOutput;
 
-#Function for rsl blink thread
-def rslBlink():
-  if enable == true:
-    #If RSL is off, turn it on. Otherwise, turn it off
-    if rslStatus == 0:
-      rslStatus = 1
-    else 
-      rslStatus = 0
-  else:
-    rslStatus = 1
-
-def timeoutDetection():
-  currentTimeout -= 1
-  if currentTimeout <= 0:
-    enable == False
-
 '''
 Main loop- setting run to false exits program
 '''
@@ -166,11 +167,12 @@ while run == True:
     #Apply Deadzones
     if (adjustedValueLeft >= (1500 - deadzone) and adjustedValueLeft <= (1500 + deadzone)):
       adjustedValueLeft = 1500
-    else if (adjustedValueRight >= (1500 - deadzone) and adjustedValueRight <= (1500 + deadzone)):
-      adjustedValueRight = 1500
-    #If not in the deadzone, reset timeout countdown
-    else:
-      currentTimeout = timeout
+    else: 
+      if (adjustedValueRight >= (1500 - deadzone) and adjustedValueRight <= (1500 + deadzone)):
+        adjustedValueRight = 1500
+      #If not in the deadzone, reset timeout countdown
+      else:
+        currentTimeout = timeout
 
     #Send PWM Frequencies to motor controllers
     pwm.setServoPulse(frontLeftMotor, adjustedValueLeft)
@@ -181,10 +183,6 @@ while run == True:
     #Press X to Disable
     if joy.X() == 1:
       enable = False
-    #Press Y to Enable
-    if joy.Y() == 1:
-      enable = True
-      currentTimeout = timeout
   else:
     #If disabled, 
     #stop motors
@@ -192,6 +190,11 @@ while run == True:
     pwm.setServoPulse(backLeftMotor, 1500)
     pwm.setServoPulse(frontRightMotor, 1500)
     pwm.setServoPulse(backRightMotor, 1500)
+  #Press Y to Enable
+  if joy.Y() == 1:
+    enable = True
+    currentTimeout = timeout
+ 
 
   #Press start + back to exit program (run = false)
   if joy.Start() == 1 and joy.Back() == 1:

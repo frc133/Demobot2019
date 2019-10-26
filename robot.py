@@ -21,20 +21,23 @@ deadzone = 200
 #Connection timeout
 timeout = 5.0
 
+#Cleanup GPIO
+GPIO.cleanup()
+
 
 '''
 Port Variables
 '''
 #Motors
-frontLeftMotor = 0     #I may have front and back switched currently
+frontLeftMotor = 0    
 backLeftMotor = 1
 frontRightMotor = 2
 backRightMotor = 3
 
 #RSL
-rslPin = 26             #CHECK THIS!!!!
+rslPin = 26         
 rslBlinkInterval = 1.0
-rslStatus = 0
+rslStatus = 1
 
 '''
 Initial Variables
@@ -47,14 +50,13 @@ enable = True
 
 #Function for rsl blink thread
 def rslBlink():
-  if enable == True:
+  while True:
+    #if enable == True:
     #If RSL is off, turn it on. Otherwise, turn it off
-    if rslStatus == 0:
-      rslStatus = 1
-    else: 
-      rslStatus = 0
-  else:
-    rslStatus = 1
+    rslStatus = -rslStatus + 1
+    print("working")
+    print(rslStatus)
+    time.sleep(1)
 
 #def timeoutDetection():
 #  currentTimeout -= 1
@@ -63,8 +65,8 @@ def rslBlink():
 
 
 currentTimeout = timeout
-##rslTimer = threading.Timer(rslBlinkInterval, rslBlink)
-#rslTimer.start()
+rslTimer = threading.Timer(1.0, rslBlink)
+rslTimer.start()
 
 #Disconnect Detection Thread 
 #timeoutThread = threading.Timer(1.0, timeoutDetection)
@@ -81,7 +83,7 @@ leftJoystick = joy.leftY()
 rightJoystick = joy.rightX()
 
 #Add PWM board and set frequency
-pwm = PCA9685(0x40, debug=True)
+pwm = PCA9685(0x40, debug=False)
 pwm.setPWMFreq(50)
 
 #Set GPIO to broadcom mode for pin reference 
@@ -148,10 +150,10 @@ while run == True:
     #Check whether RSL should be on or off
     if rslStatus == 1:
       #Turn RSL on
-      GPIO.output(rslPin, GPIO.HIGH)
+      GPIO.output(rslPin, True)
     else:
       #Turn RSL off
-      GPIO.output(rslPin, GPIO.LOW)
+      GPIO.output(rslPin, False)
 
     #Constantly poll left and right joystick positions
     leftJoystick = joy.leftY()

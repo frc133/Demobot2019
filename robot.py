@@ -35,9 +35,9 @@ frontRightMotor = 2
 backRightMotor = 3
 
 #RSL
-rslPin = 26         
-rslBlinkInterval = 1.0
-rslStatus = 1
+# rslPin = 26         
+# rslBlinkInterval = 1.0
+# rslStatus = 1
 
 '''
 Initial Variables
@@ -49,14 +49,14 @@ enable = True
 #RSL thread
 
 #Function for rsl blink thread
-def rslBlink():
-  while True:
-    #if enable == True:
-    #If RSL is off, turn it on. Otherwise, turn it off
-    rslStatus = -rslStatus + 1
-    print("working")
-    print(rslStatus)
-    time.sleep(1)
+# def rslBlink():
+#   while True:
+#     #if enable == True:
+#     #If RSL is off, turn it on. Otherwise, turn it off
+#     rslStatus = -rslStatus + 1
+#     print("working")
+#     print(rslStatus)
+#     time.sleep(1)
 
 #def timeoutDetection():
 #  currentTimeout -= 1
@@ -64,9 +64,9 @@ def rslBlink():
 #    enable == False
 
 
-currentTimeout = timeout
-rslTimer = threading.Timer(1.0, rslBlink)
-rslTimer.start()
+# currentTimeout = timeout
+# rslTimer = threading.Timer(1.0, rslBlink)
+# rslTimer.start()
 
 #Disconnect Detection Thread 
 #timeoutThread = threading.Timer(1.0, timeoutDetection)
@@ -90,7 +90,7 @@ pwm.setPWMFreq(50)
 GPIO.setmode(GPIO.BCM)
 
 #Set RSL pin as an output
-GPIO.setup(rslPin, GPIO.OUT)
+# GPIO.setup(rslPin, GPIO.OUT)
 
 #Drive functions for 2-joystick control, adapted from wpilibj differentialdrive class
 #xSpeed is forward and backward on the left joystick, zRotation is left and right on the right joystick
@@ -140,6 +140,7 @@ def arcadeDrive(xSpeed, zRotation, squareInputs):
 Main loop- setting run to false exits program
 '''
 while run == True:
+
   #Enabled loop
   if enable == True:
 
@@ -148,12 +149,12 @@ while run == True:
       enable = False
 
     #Check whether RSL should be on or off
-    if rslStatus == 1:
-      #Turn RSL on
-      GPIO.output(rslPin, True)
-    else:
-      #Turn RSL off
-      GPIO.output(rslPin, False)
+    #     if rslStatus == 1:
+    #       #Turn RSL on
+    #       GPIO.output(rslPin, True)
+    #     else:
+    #       #Turn RSL off
+    #       GPIO.output(rslPin, False)
 
     #Constantly poll left and right joystick positions
     leftJoystick = joy.leftY()

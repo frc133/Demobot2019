@@ -10,6 +10,16 @@ def deadzone(value):
   return value
 
 
+def squareInput(value):
+  if value < 0:
+    return value * value * -1
+  return value * value
+
+
+def adj2pwm(value):
+  return (value+1)*500+1000
+
+
 joy = xbox.Joystick()
 leftJoystick = joy.leftY()
 rightJoystick = joy.rightX()
@@ -17,11 +27,10 @@ rightJoystick = joy.rightX()
 run = True
 
 while run == True:
-  leftJoystick = deadzone(joy.leftY())
-  rightJoystick = deadzone(joy.rightX())
-  adjustedValueLeft = (leftJoystick+1)*500+1000
-  
-  adjustedValueRight = (rightJoystick+1)*500+1000
+  leftJoystick = joy.leftY()
+  rightJoystick = joy.rightY()
+  adjustedValueLeft = deadzone(adj2pwm(squareInput(leftJoystick)))
+  adjustedValueRight = deadzone(adj2pwm(squareInput(rightJoystick)))
   print(str(adjustedValueLeft) + " - " + str(adjustedValueRight))
   if joy.Start() == 1 and joy.Back() == 1:
     run = False

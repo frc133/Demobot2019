@@ -96,45 +96,45 @@ GPIO.setmode(GPIO.BCM)
 #xSpeed is forward and backward on the left joystick, zRotation is left and right on the right joystick
 def arcadeDrive(xSpeed, zRotation, squareInputs):
 
-    #Add speed multiplier 
-    xSpeed = xSpeed * speedMultiplier
+  #Add speed multiplier 
+  xSpeed = xSpeed * speedMultiplier
 
-    #Add Drag to correct robot drift
-    xSpeed += drag
+  #Add Drag to correct robot drift
+  xSpeed += drag
 
-    #Clamp xSpeed and zRotation to -1.0 to 1.0
-    xSpeed = max(min(xSpeed, 1.0), -1.0)
-    zRotation = max(min(zRotation, 1.0), -1.0)
+  #Clamp xSpeed and zRotation to -1.0 to 1.0
+  xSpeed = max(min(xSpeed, 1.0), -1.0)
+  zRotation = max(min(zRotation, 1.0), -1.0)
 
-    #Square inputs to control speed at a curve
-    if squareInputs:
-      xSpeed = math.copysign(xSpeed * xSpeed, xSpeed)
-      zRotation = math.copysign(zRotation * zRotation, zRotation)
+  #Square inputs to control speed at a curve
+  if squareInputs:
+    xSpeed = math.copysign(xSpeed * xSpeed, xSpeed)
+    zRotation = math.copysign(zRotation * zRotation, zRotation)
 
-    #maxInput math for setting speeds
-    maxInput = math.copysign(max(abs(xSpeed), abs(zRotation)), xSpeed)
+  #maxInput math for setting speeds
+  maxInput = math.copysign(max(abs(xSpeed), abs(zRotation)), xSpeed)
 
-    #If statements seperating turning and direction into quadrants
-    if xSpeed >= 0.0:
-        if zRotation >= 0.0:
-          #First Quadrant
-          leftMotorOutput = maxInput
-          rightMotorOutput = xSpeed - zRotation
-        else:
-          #Second Quadrant
-          leftMotorOutput = xSpeed + zRotation
-          rightMotorOutput = maxInput
+  #If statements seperating turning and direction into quadrants
+  if xSpeed >= 0.0:
+    if zRotation >= 0.0:
+      #First Quadrant
+      leftMotorOutput = maxInput
+      rightMotorOutput = xSpeed - zRotation
     else:
-      if zRotation >= 0.0:
-        #Third Quadrant
-        leftMotorOutput = xSpeed + zRotation
-        rightMotorOutput = maxInput
-      else:
-        #Fourth Quadrant
-        leftMotorOutput = maxInput
-        rightMotorOutput = xSpeed - zRotation
-    #Returns left and right motor output values between -1.0 and 1.0 as a tuple
-    return leftMotorOutput, rightMotorOutput;
+      #Second Quadrant
+      leftMotorOutput = xSpeed + zRotation
+      rightMotorOutput = maxInput
+  else:
+    if zRotation >= 0.0:
+      #Third Quadrant
+      leftMotorOutput = xSpeed + zRotation
+      rightMotorOutput = maxInput
+    else:
+      #Fourth Quadrant
+      leftMotorOutput = maxInput
+      rightMotorOutput = xSpeed - zRotation
+  #Returns left and right motor output values between -1.0 and 1.0 as a tuple
+  return leftMotorOutput, rightMotorOutput;
 
 '''
 Main loop- setting run to false exits program

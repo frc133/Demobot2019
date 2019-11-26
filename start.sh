@@ -1,2 +1,1 @@
-sudo python3 /home/pi/Desktop/robot/robot.py
-
+sudo python3 /home/pi/Desktop/robot/robotnew.py
